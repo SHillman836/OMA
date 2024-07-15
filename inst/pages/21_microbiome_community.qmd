@@ -1,9 +1,3 @@
----
-editor: 
-  markdown: 
-    wrap: 72
----
-
 # Community Composition {#sec-microbiome-community}
 
 ```{r setup, echo=FALSE, results="asis"}
@@ -34,7 +28,7 @@ tse <- transformAssay(tse, assay.type = "counts", method = "relabundance")
 
 # Getting top taxa on a Phylum level
 tse_phylum <- mergeFeaturesByRank(tse, rank ="Phylum", onRankOnly=TRUE)
-top_taxa <- getTopTaxa(tse_phylum,top = 5, assay.type = "relabundance")
+top_taxa <- getTop(tse_phylum,top = 5, assay.type = "relabundance")
 
 # Renaming the "Phylum" rank to keep only top taxa and the rest to "Other"
 phylum_renamed <- lapply(rowData(tse)$Phylum,
@@ -100,11 +94,10 @@ ggplot(df, aes(x = SampleID, y = FeatureID, fill = clr_z)) +
   labs(x = "Samples", y = "Taxa")
 ```
 
-*pheatmap* is a package that provides methods to plot clustered
-heatmaps.
+*ComplexHeatmap* is a package that provides methods to plot clustered heatmaps.
 
 ```{r pheatmap1}
-library(pheatmap)
+library(ComplexHeatmap)
 
 # Takes subset: only samples from feces, skin, or tongue
 tse_phylum_subset <- tse_phylum[ , tse_phylum$SampleType %in% c("Feces", "Skin", "Tongue") ]
@@ -126,7 +119,7 @@ tse_phylum_subset <- tse_phylum_subset[top_taxa, ]
 mat <- assay(tse_phylum_subset, "clr_z")
 
 # Creates the heatmap
-pheatmap(mat)
+ComplexHeatmap::pheatmap(mat)
 ```
 
 We can create clusters by hierarchical clustering and add them to the
@@ -271,7 +264,7 @@ tse <- transformAssay(tse, assay.type = "counts", method = "clr", MARGIN = "samp
 tse <- transformAssay(tse, assay.type = "clr", method = "standardize", MARGIN = "features", name = "standardized")
 
 # Perform PCA on the dataset
-reducedDim(tse, "PCA") <- calculatePCA(tse, ncomponents = 10, assay.type = "standardized")
+tse <- runPCA(tse, ncomponents = 10, assay.type = "standardized")
 
 # Sort by radial theta using the first two principal components
 sorted_order <- getNeatOrder(reducedDim(tse, "PCA")[, c(1, 2)], centering = "mean")
