@@ -27,7 +27,7 @@ library(miaViz)
 tse <- transformAssay(tse, assay.type = "counts", method = "relabundance")
 
 # Getting top taxa on a Phylum level
-tse_phylum <- mergeFeaturesByRank(tse, rank ="Phylum", onRankOnly=TRUE)
+tse_phylum <- agglomerateByRank(tse, rank ="Phylum", disable.taxonomy=TRUE)
 top_taxa <- getTop(tse_phylum,top = 5, assay.type = "relabundance")
 
 # Renaming the "Phylum" rank to keep only top taxa and the rest to "Other"
@@ -37,8 +37,8 @@ rowData(tse)$Phylum <- as.character(phylum_renamed)
 
 # Visualizing the composition barplot, with samples order by "Bacteroidetes"
 plotAbundance(tse_phylum, assay.type="relabundance", rank = "Phylum",
-              order_rank_by="abund", 
-              order_sample_by = "Bacteroidetes")
+              order.row.by="abund", 
+              order.col.by = "Bacteroidetes")
 ```
 
 ### Composition heatmap {#sec-composition-heatmap}
@@ -65,10 +65,10 @@ tse_phylum <- transformAssay(tse_phylum, assay.type = "counts",
 tse_phylum <- transformAssay(tse_phylum, assay.type = "relabundance",
                               method = "clr", pseudocount = TRUE)
 
-# Add z-transformation on features (taxa)
+# Add standardize-transformation on features (taxa)
 tse_phylum <- transformAssay(tse_phylum, assay.type = "clr", 
-                              MARGIN = "features",
-                              method = "z", name = "clr_z")
+                              MARGIN = "rows",
+                              method = "standardize", name = "clr_z")
 ```
 
 Visualize as a heatmap.
@@ -108,8 +108,8 @@ tse_phylum_subset <- transformAssay(tse_phylum_subset,
     			 pseudocount = 1)
 
 tse_phylum_subset <- transformAssay(tse_phylum_subset, assay.type = "clr",
-                                     MARGIN = "features", 
-                                     method = "z", name = "clr_z")
+                                     MARGIN = "rows", 
+                                     method = "standardize", name = "clr_z")
 
 # Get n most abundant taxa, and subsets the data by them
 top_taxa <- getTop(tse_phylum_subset, top = 20)
@@ -158,7 +158,7 @@ taxa_clusters <- cutree(tree = taxa_hclust, k = 3)
 taxa_clusters <- data.frame(clusters = taxa_clusters)
 taxa_clusters$clusters <- factor(taxa_clusters$clusters)
 
-# Order data so that it's same as in phylo tree
+# Order data so that it's same as in the phylo tree
 taxa_clusters <- taxa_clusters[taxa_ordered, , drop = FALSE] 
 
 # Prints taxa and their clusters
@@ -200,7 +200,7 @@ sample_data <- data.frame(clusters = sample_clusters)
 # Order data so that it's same as in phylo tree
 sample_data <- sample_data[samples_ordered, , drop = FALSE] 
 
-# Order data based on 
+# Order data based on the phylo tree
 tse_phylum_subset <- tse_phylum_subset[ , rownames(sample_data)]
 
 # Add sample type data
@@ -212,7 +212,7 @@ sample_data
 Now we can create a heatmap with additional annotations.
 
 ```{r pheatmap8}
-# Determines the scaling of colorss
+# Determines the scaling of colors
 # Scale colors
 breaks <- seq(-ceiling(max(abs(mat))), ceiling(max(abs(mat))), 
               length.out = ifelse( max(abs(mat))>5, 2*ceiling(max(abs(mat))), 10 ) )
